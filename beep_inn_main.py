@@ -11,7 +11,7 @@ Uses Python3
 from __future__ import print_function
 
 # Standard Imports
-import sys
+#import sys
 import time
 import traceback
 
@@ -28,10 +28,9 @@ def main():
 	'''Main print_function
 	'''
 
-	
 	while True:
 		RADIO.rtl_settings()
-		#samples = RADIO.get_points()
+		#samples = RADIO.get_points(256*1024)
 		#RADIO.math_it(samples)
 		RADIO.simple_samples(256)
 		time.sleep(0.5)
@@ -41,7 +40,7 @@ if __name__ == '__main__':
 		main()
 	except KeyboardInterrupt:
 		print("closing")
-	except Exception as e:
+	except Exception as inst:
 		traceback.print_exc()
 		raise # reraises the exception
 	finally:
