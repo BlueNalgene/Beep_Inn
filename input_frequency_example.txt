@@ -1,0 +1,9 @@
+## Each line must be a number representing the frequency to monitor
+## Units are in Hz
+## If the line is NOT a number, it will skip it.
+## 
+#150000000.000
+150380000.0
+#150500000.444
+#160000000.000
+#166638000.00000001

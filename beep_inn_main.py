@@ -11,6 +11,7 @@ Uses Python3
 from __future__ import print_function
 
 # Standard Imports
+import os
 #import sys
 import time
 import traceback
@@ -20,24 +21,31 @@ import traceback
 
 # Local Imports
 #from rtlsdr import RtlSdr
-from Beep_Inn_Classes import RTLSDR
+from Beep_Inn_Classes import Arg, Config
 
-RADIO = RTLSDR.RTLSDR()
+#RADIO = RTLSDR.RTLSDR()
 
-def main():
+def main(hzfile):
 	'''Main print_function
 	'''
 
-	while True:
-		RADIO.rtl_settings()
-		#samples = RADIO.get_points(256*1024)
-		#RADIO.math_it(samples)
-		RADIO.simple_samples(256)
-		time.sleep(0.5)
+	#while True:
+		## Lazy try/except to start count
+		#try:
+			#cnt = RADIO.hz_cycle(hzlist, cnt)
+		#except UnboundLocalError:
+			#cnt = RADIO.hz_cycle(hzlist)
+		###RADIO.get_points()
+		#RADIO.startup()
+		#RADIO.refresher()
+		#time.sleep(0.5)
 
 if __name__ == '__main__':
+	arg = Arg.Args()
+	arg = arg.get_parser().parse_args()
+	Config.Configurator()
 	try:
-		main()
+		main(arg.filename)
 	except KeyboardInterrupt:
 		print("closing")
 	except Exception as inst:
