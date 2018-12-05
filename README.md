@@ -69,6 +69,9 @@ rtl_fm -M am -f 118M:137M:25k -s 12k -g 50 -l 280 | play -r 12k ...
 ```
 ### Citations
 Sources for RTL_SDR setup (retrieved Feb. 9th, 2018):
+
 https://ranous.files.wordpress.com/2016/03/rtl-sdr4linux_quickstartv10-16.pdf
+
 http://kmkeen.com/rtl-demod-guide/
+
 http://kmkeen.com/rtl-power/
