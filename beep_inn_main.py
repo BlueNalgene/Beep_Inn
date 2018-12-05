@@ -25,9 +25,14 @@ from Beep_Inn_Classes import Arg, Config
 
 #RADIO = RTLSDR.RTLSDR()
 
-def main(hzfile):
+def main(hzfile, guiswitch):
 	'''Main print_function
 	'''
+	## Set up the frequencies in a list
+	#hzlist = RADIO.rtl_settings(hzfile)
+	## Send GUI info
+	#RADIO.is_gui(guiswitch)
+	
 
 	#while True:
 		## Lazy try/except to start count
@@ -45,7 +50,7 @@ if __name__ == '__main__':
 	arg = arg.get_parser().parse_args()
 	Config.Configurator()
 	try:
-		main(arg.filename)
+		main(arg.filename, arg.gui)
 	except KeyboardInterrupt:
 		print("closing")
 	except Exception as inst:

@@ -25,6 +25,11 @@ class Configurator():
 			self.default_gen()
 		return
 
+	def localpath(self):
+		'''Returns the localpath
+		'''
+		return str(os.path.dirname(os.path.abspath(__file__)))
+
 	def get_path(self):
 		'''Returns the config path for reading
 		'''

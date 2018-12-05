@@ -27,8 +27,8 @@ class Args():
 		parser.add_argument("-f", "--file", dest="filename", required=True,\
 			type=lambda x: self.is_valid_file(parser, x),\
 				help="input file with a line-broken frequency values (see example)", metavar="FILE")
-		parser.add_argument("-m", "--mode", dest="mode", required=True, type=int,\
-			help="Test")
+		#parser.add_argument("-m", "--mode", dest="mode", required=True, type=int,\
+			#help="Test")
 		parser.add_argument("-g", "--gui", dest="gui", action="store_true", default=False,\
 			help="Enables the graphical interface")
 		parser.add_argument("-t", "--threshold", dest="thresh", type=float, default=30,\

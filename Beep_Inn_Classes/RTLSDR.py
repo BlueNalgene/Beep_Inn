@@ -11,7 +11,7 @@ from __future__ import print_function
 # Standard Imports
 import math
 import sys
-#import time
+import time
 
 # Non-standard Imports
 #from pylab import psd, xlabel, ylabel, show, waitforbuttonpress
@@ -36,6 +36,7 @@ class RTLSDR():
 	fig = plt.figure()
 	image = -100*np.ones((100, 1024))
 	samples = []
+	gui_switch = False
 
 	# Plotting Variables
 	nfft = int(cfg.value('Plot_Values', 'nfft_count'))
@@ -49,6 +50,16 @@ class RTLSDR():
 		# Make sure our counter is at zero when we startup
 		self.cnt = 0
 		self.init_plot()
+		# Write a new temporary output file
+		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
+			fff.write('Time, Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
+		return
+
+	def is_gui(self, guiarg):
+		'''Activates a self switch to enable the gui interface,
+		otherwise, it is set to false.
+		'''
+		self.gui_switch = guiarg
 		return
 
 	def rtl_settings(self, hzfile):
@@ -109,21 +120,40 @@ class RTLSDR():
 		ffss = self.sdr.sample_rate/1e6
 		self.get_points()
 		# Returns the figure as well as a 1D plot of the intensities.
-		aaa, figure = plt.psd(self.samples, self.nfft, ffss, ffcc)
+		intense, figure = plt.psd(self.samples, self.nfft, ffss, ffcc)
 		plt.xlabel('Frequency (MHz)')
 		plt.ylabel('Relative power (dB)')
 		# We find local peaks from the intensity 1D
-		peaks, _ = sig.find_peaks(aaa, prominence=1)
-		print("frame")
+		peaks, _ = sig.find_peaks(intense, prominence=1)
+		lowvals = []
+		for i in intense:
+			if i not in peaks:
+				lowvals.append(i)
 		for i in peaks:
-			# TODO Does this work?
-			peakloc = int(ffcc*ffss)*i-int(ffcc)
-			peakhgt = 10*math.log10(aaa[i])
-			print(peakloc, peakhgt)
+			pass
+			## TODO Does this work?
+			#peakloc = int(ffcc*ffss)*i-int(ffcc)
+			#peakhgt = 10*math.log10(intense[i])
+			#print(peakloc, peakhgt)
+			
+		if self.csv_switch:
+			pass
+		self.record_values(lowvals, peaks)
 		# Put the figure in the image storage hole.  This can really be done in one step, but
 		# this is done in case we want to doctor "figure" during the cycle"
 		self.image = figure
 		#return self.image
+		return
+
+	def record_values(self, lowvals, peaks):
+		'''Records the values as we go along.
+		Puts things into a temporary csv file.
+		If there is a 'hit', the hit logged in a column.
+		Otherwise, this is left blank.
+		'''
+		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
+			fff.write(str(time.time()) + ',' + self.sdr.center_freq + ',' +\
+				str(sum(lowvals)/(self.nfft-len(peaks))) + ',' + 'hat' + '\n')
 		return
 
 	def startup(self):
