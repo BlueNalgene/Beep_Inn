@@ -18,18 +18,19 @@ import time
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.signal as sig
+#import scipy.signal as sig
+import peakutils
 
 # Local Imports
 from rtlsdr import RtlSdr
-from Config import Configurator
+from . import Config
 
-class RTLSDR():
+class SDR_Tools():
 	'''RTLSDR class handles all of the SDR related commands
 	'''
 	# Define the source we are using in everything here.
 	sdr = RtlSdr()
-	cfg = Configurator()
+	cfg = Config.Configurator()
 
 	# Local variable(s)
 	cnt = ''
@@ -37,6 +38,7 @@ class RTLSDR():
 	image = -100*np.ones((100, 1024))
 	samples = []
 	gui_switch = False
+	csv_switch = False
 
 	# Plotting Variables
 	nfft = int(cfg.value('Plot_Values', 'nfft_count'))
@@ -46,10 +48,13 @@ class RTLSDR():
 		# Pull device initial values from config file
 		self.sdr.sample_rate = float(self.cfg.value('SDR_Values', 'sampleratehz'))
 		self.sdr.freq_correction = int(self.cfg.value('SDR_Values', 'correctionppm'))
-		self.sdr.gain = self.cfg.value('SDR_Values', 'gain')
+		self.sdr.gain = int(self.cfg.value('SDR_Values', 'gain'))
 		# Make sure our counter is at zero when we startup
 		self.cnt = 0
-		self.init_plot()
+		# Init an animate-able plot with axes
+		self.fig.add_subplot(1,1,1)
+		plt.xlabel('Frequency (MHz)')
+		plt.ylabel('Relative power (dB)')
 		# Write a new temporary output file
 		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
 			fff.write('Time, Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
@@ -102,19 +107,12 @@ class RTLSDR():
 		self.sdr.close()
 		return
 
-	def init_plot(self):
-		'''This just starts the drawing function for the first time and allows it to refresh.
-		TODO roll into __init__
-		'''
-		self.fig.add_subplot(1,1,1)
-		self.samples = self.get_points()
-		plt.xlabel('Frequency (MHz)')
-		plt.ylabel('Relative power (dB)')
-		return
-
 	def refresher(self):
 		'''Draws a new plot on the screen with each pass.  Useful for debugging.
 		'''
+		# Set things for imported animated bits (aka, wait then clear)
+		plt.pause(0.05)
+		self.fig.clf()
 		# We need to redeclare these for each cycle since this will be changing.
 		ffcc = self.sdr.center_freq/1e6
 		ffss = self.sdr.sample_rate/1e6
@@ -123,46 +121,32 @@ class RTLSDR():
 		intense, figure = plt.psd(self.samples, self.nfft, ffss, ffcc)
 		plt.xlabel('Frequency (MHz)')
 		plt.ylabel('Relative power (dB)')
+		plt.ylim(-50, 10)
 		# We find local peaks from the intensity 1D
-		peaks, _ = sig.find_peaks(intense, prominence=1)
+		peaks = peakutils.indexes(intense, thres=0.02/max(intense), min_dist=100)
+
 		lowvals = []
 		for i in intense:
 			if i not in peaks:
 				lowvals.append(i)
+
+		peakfreq = []
 		for i in peaks:
-			pass
-			## TODO Does this work?
-			#peakloc = int(ffcc*ffss)*i-int(ffcc)
-			#peakhgt = 10*math.log10(intense[i])
-			#print(peakloc, peakhgt)
-			
-		if self.csv_switch:
-			pass
-		self.record_values(lowvals, peaks)
+			peakhgt = 10*math.log10(intense[i])
+			peakfreq.append(figure[i])
+			self.record_values(lowvals, peaks, figure[i])
 		# Put the figure in the image storage hole.  This can really be done in one step, but
 		# this is done in case we want to doctor "figure" during the cycle"
 		self.image = figure
-		#return self.image
 		return
 
-	def record_values(self, lowvals, peaks):
+	def record_values(self, lowvals, peaks, peakfreq):
 		'''Records the values as we go along.
 		Puts things into a temporary csv file.
 		If there is a 'hit', the hit logged in a column.
 		Otherwise, this is left blank.
 		'''
-		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
-			fff.write(str(time.time()) + ',' + self.sdr.center_freq + ',' +\
-				str(sum(lowvals)/(self.nfft-len(peaks))) + ',' + 'hat' + '\n')
-		return
-
-	def startup(self):
-		'''
-		TODO currently is running every cycle.  May be able to just run once or go in refresher.
-		'''
-		blit = False
-		self.fig.canvas.draw()
-		plt.pause(0.05)
-		plt.clf
-		self.fig.canvas.flush_events()
+		with open(str(self.cfg.localpath() + '/temp.csv'), 'a') as fff:
+			fff.write(str(time.time()) + ',' + str(self.sdr.center_freq) + ',' +\
+				str(sum(lowvals)/(self.nfft-len(peaks))) + ',' + str(peakfreq) + '\n')
 		return

@@ -20,35 +20,34 @@ import traceback
 
 
 # Local Imports
-#from rtlsdr import RtlSdr
-from Beep_Inn_Classes import Arg, Config
+from Beep_Inn_Classes import Arg, Config, Clockset, RTLSDR
 
-#RADIO = RTLSDR.RTLSDR()
+RADIO = RTLSDR.SDR_Tools()
 
 def main(hzfile, guiswitch):
 	'''Main print_function
 	'''
-	## Set up the frequencies in a list
-	#hzlist = RADIO.rtl_settings(hzfile)
-	## Send GUI info
-	#RADIO.is_gui(guiswitch)
+	# Set up the frequencies in a list
+	hzlist = RADIO.rtl_settings(hzfile)
+	# Send GUI info
+	RADIO.is_gui(guiswitch)
 	
 
-	#while True:
-		## Lazy try/except to start count
-		#try:
-			#cnt = RADIO.hz_cycle(hzlist, cnt)
-		#except UnboundLocalError:
-			#cnt = RADIO.hz_cycle(hzlist)
-		###RADIO.get_points()
-		#RADIO.startup()
-		#RADIO.refresher()
-		#time.sleep(0.5)
+	while True:
+		# Lazy try/except to start count
+		try:
+			cnt = RADIO.hz_cycle(hzlist, cnt)
+		except UnboundLocalError:
+			cnt = RADIO.hz_cycle(hzlist)
+		RADIO.refresher()
+		time.sleep(0.01)
 
 if __name__ == '__main__':
 	arg = Arg.Args()
 	arg = arg.get_parser().parse_args()
 	Config.Configurator()
+	#if arg.rtcgetter:
+		#Clockset.rtc()
 	try:
 		main(arg.filename, arg.gui)
 	except KeyboardInterrupt:
