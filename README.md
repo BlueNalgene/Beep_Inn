@@ -12,6 +12,7 @@ System Prerequisites:
  
  Pip3 Prerequisites:
   - pyrtlsdr
+  - peakutils
 
 ## Basic Use
 Create a file that lists each of the frequencies you are interested in as a new line.  Each number must be in cycles (Hz).
