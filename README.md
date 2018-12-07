@@ -28,7 +28,7 @@ python3 /path/to/Beep_Inn/beep_inn_main.py -f "./input_frequency_example.txt"
 ### The simple stuff; paste and run
 ```
 sudo apt update
-sudo apt install git cmake build-essential libusb-1.0.-0-dev sox
+sudo apt -y install git cmake build-essential libusb-1.0-0-dev sox
 git clone git://git.osmocom.org/rtl-sdr.git
 cd rtl-sdr/
 mkdir build
