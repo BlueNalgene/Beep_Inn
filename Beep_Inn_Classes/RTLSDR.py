@@ -10,6 +10,7 @@ from __future__ import print_function
 
 # Standard Imports
 import math
+import statistics as stats
 import sys
 import time
 
@@ -136,14 +137,16 @@ class SDR_Tools():
 
 		for i in peaks:
 			peakhgt = 10*math.log10(intense[i])
+			low = 10*math.log10(stats.median(lowvals))
 			peakfreq = figure[i]
-			self.record_values(lowvals, peaks, figure[i], peakhgt)
+			print(lowvals)
+			self.record_values(low, peaks, figure[i], peakhgt)
 		# Put the figure in the image storage hole.  This can really be done in one step, but
 		# this is done in case we want to doctor "figure" during the cycle"
 		self.image = figure
 		return
 
-	def record_values(self, lowvals, peaks, peakfreq, peakhgt):
+	def record_values(self, low, peaks, peakfreq, peakhgt):
 		'''Records the values as we go along.
 		Puts things into a temporary csv file.
 		If there is a 'hit', the hit logged in a column.
@@ -151,7 +154,7 @@ class SDR_Tools():
 		'''
 		with open(str(self.cfg.localpath() + '/temp.csv'), 'a') as fff:
 			fff.write(str(time.time()) + ',' + str(self.sdr.center_freq) + ',' + str(peakfreq) +\
-				',' + str(sum(lowvals)/(self.nfft-len(peaks))) + ',' + str(peakhgt) + '\n')
+				',' + str(low) + ',' + str(peakhgt) + '\n')
 		return
 
 	def gpscoord(self):
