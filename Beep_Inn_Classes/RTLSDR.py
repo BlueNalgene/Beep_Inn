@@ -43,6 +43,8 @@ class SDR_Tools():
 	# Plotting Variables
 	nfft = int(cfg.value('Plot_Values', 'nfft_count'))
 	samp = int(cfg.value('Plot_Values', 'samplemod_count'))
+	thresh = float(cfg.value('Plot_Values', 'peakthresh'))
+	pkdist = int(cfg.value('Plot_Values', 'peakdistance'))
 
 	def __init__(self):
 		# Pull device initial values from config file
@@ -57,7 +59,7 @@ class SDR_Tools():
 		plt.ylabel('Relative power (dB)')
 		# Write a new temporary output file
 		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
-			fff.write('Time, Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
+			fff.write('Time(s, UTC, unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
 		return
 
 	def is_gui(self, guiarg):
@@ -123,30 +125,29 @@ class SDR_Tools():
 		plt.ylabel('Relative power (dB)')
 		plt.ylim(-50, 10)
 		# We find local peaks from the intensity 1D
-		peaks = peakutils.indexes(intense, thres=0.02/max(intense), min_dist=100)
+		peaks = peakutils.indexes(intense, thres=self.thresh/max(intense), min_dist=self.pkdist)
 
 		lowvals = []
 		for i in intense:
 			if i not in peaks:
 				lowvals.append(i)
 
-		peakfreq = []
 		for i in peaks:
 			peakhgt = 10*math.log10(intense[i])
-			peakfreq.append(figure[i])
-			self.record_values(lowvals, peaks, figure[i])
+			peakfreq = figure[i]
+			self.record_values(lowvals, peaks, figure[i], peakhgt)
 		# Put the figure in the image storage hole.  This can really be done in one step, but
 		# this is done in case we want to doctor "figure" during the cycle"
 		self.image = figure
 		return
 
-	def record_values(self, lowvals, peaks, peakfreq):
+	def record_values(self, lowvals, peaks, peakfreq, peakhgt):
 		'''Records the values as we go along.
 		Puts things into a temporary csv file.
 		If there is a 'hit', the hit logged in a column.
 		Otherwise, this is left blank.
 		'''
 		with open(str(self.cfg.localpath() + '/temp.csv'), 'a') as fff:
-			fff.write(str(time.time()) + ',' + str(self.sdr.center_freq) + ',' +\
-				str(sum(lowvals)/(self.nfft-len(peaks))) + ',' + str(peakfreq) + '\n')
+			fff.write(str(time.time()) + ',' + str(self.sdr.center_freq) + ',' + str(peakfreq) +\
+				',' + str(sum(lowvals)/(self.nfft-len(peaks))) + ',' + str(peakhgt) + '\n')
 		return

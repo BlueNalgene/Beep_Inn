@@ -50,7 +50,9 @@ class Configurator():
 		self.config['SDR_Values']['CorrectionPPM'] = '60'
 		self.config['Plot_Values']['NFFT_count'] = '1024'
 		self.config['Plot_Values']['SampleMod_count'] = '256'
-		self.config['SDR_Values']['Gain'] = 'auto'
+		self.config['Plot_Values']['Peakthresh'] = '0.02'
+		self.config['Plot_Values']['Peakdistance'] = '100'
+		self.config['SDR_Values']['Gain'] = '20'
 		with open(self.configpath, 'w') as configfile:
 			self.config.write(configfile)
 		return
