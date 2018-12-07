@@ -59,6 +59,7 @@ class SDR_Tools():
 		plt.ylabel('Relative power (dB)')
 		# Write a new temporary output file
 		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
+			#fff.write(self.gpscoord)
 			fff.write('Time(s, UTC, unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
 		return
 
@@ -152,3 +153,30 @@ class SDR_Tools():
 			fff.write(str(time.time()) + ',' + str(self.sdr.center_freq) + ',' + str(peakfreq) +\
 				',' + str(sum(lowvals)/(self.nfft-len(peaks))) + ',' + str(peakhgt) + '\n')
 		return
+
+	def gpscoord(self):
+		'''Checks if GPS is enabled in the system.
+		If it is, gets coordinates from gpsd.
+		Sends as string.
+		'''
+		import gps
+		# Listen on port 2947 (gpsd) of localhost
+		session = gps.gps("localhost", "2947")
+		session.stream(gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
+		
+		while True:
+			try:
+				report = session.next()
+				# Wait for a 'TPV' report and display the current time
+				# To see all report data, uncomment the line below
+				# print(report)
+				if report['class'] == 'TPV':
+					if hasattr(report, 'time'):
+						print(report.time)
+			except KeyError:
+				pass
+			except KeyboardInterrupt:
+				quit()
+			except StopIteration:
+				session = None
+				print("GPSD has terminated")
