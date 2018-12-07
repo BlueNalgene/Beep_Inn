@@ -15,9 +15,7 @@ class Args():
 	def __init__(self):
 		'''Get the arguments
 		'''
-		self.arg = self.get_parser().parse_args()
-		if self.arg.gui:
-			self.guiinit()
+		return
 
 	def get_parser(self):
 		'''Get parser object for script processor.py
@@ -55,9 +53,3 @@ class Args():
 			sys.exit(1)
 		else:
 			return arg
-
-	def guiinit(self):
-		'''Tells Beep_Inn to start the GUI
-		'''
-		from . import GuiFramework
-		return

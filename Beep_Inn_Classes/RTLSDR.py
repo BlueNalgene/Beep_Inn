@@ -113,7 +113,8 @@ class SDR_Tools():
 		'''Draws a new plot on the screen with each pass.  Useful for debugging.
 		'''
 		# Set things for imported animated bits (aka, wait then clear)
-		plt.pause(0.05)
+		if self.gui_switch:
+			plt.pause(0.05)
 		self.fig.clf()
 		# We need to redeclare these for each cycle since this will be changing.
 		ffcc = self.sdr.center_freq/1e6
