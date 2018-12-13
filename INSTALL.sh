@@ -167,7 +167,7 @@ before_reboot() {
 	else
 		$DIR/INSTALL.sh
 	fi
-	EOF
+EOF
 	# Make exectuable
 	sudo chmod +x /etc/beep-inn-install.sh
 	# Add to rc.local
