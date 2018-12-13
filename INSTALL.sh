@@ -86,7 +86,7 @@ before_reboot() {
 		echo "Installing cmake, sox, and usb tools for rtl_sdr" >&2
 		sudo apt -y install git cmake build-essential libusb-1.0-0-dev sox
 		echo "Git\'ing files for rtl_sdr"
-		cd "/home/$USER/" || exit
+		cd "/home/$SUDO_USER/" || exit
 		git clone git://git.osmocom.org/rtl-sdr.git
 		cd rtl-sdr/ || exit
 		echo "Building rtl_sdr"
