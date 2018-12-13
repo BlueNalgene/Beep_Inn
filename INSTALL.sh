@@ -160,14 +160,14 @@ before_reboot() {
 	# Then adds the executable script to rc.local
 	sudo touch /etc/beep-inn-install.sh
 	cat >> sudo tee /etc/beep-inn-install.sh << EOF
-#! /bin/sh
+	#! /bin/sh
 
-if [ ! -f '/home/rebootflag.file' ]; then
-	logger beep-inn-install.sh was run at startup, but did not find rebootflag.file
-else
-	$DIR/INSTALL.sh
-fi
-EOF
+	if [ ! -f '/home/rebootflag.file' ]; then
+		logger beep-inn-install.sh was run at startup, but did not find rebootflag.file
+	else
+		$DIR/INSTALL.sh
+	fi
+	EOF
 	# Make exectuable
 	sudo chmod +x /etc/beep-inn-install.sh
 	# Add to rc.local
