@@ -28,6 +28,7 @@ check_boot() {
 
 
 before_reboot() {
+	logger BEEPINNINSTALL - Init
 	echo ""
 	echo "********************************************************"
 	echo "*                                                      *"
@@ -56,55 +57,71 @@ before_reboot() {
 	if ! [ -x "$(command -v git)" ]; then
 		echo 'Installing git (how did you get this file?)' >&2
 		sudo apt -y install git
+		logger BEEPINNINSTALL - Installing git
 	else
 		echo "git already installed..."
+		logger BEEPINNINSTALL - git already installed
 	fi
 
 	if ! [ -x "$(command -v python3)" ]; then
 		echo 'Installing python3' >&2
 		sudo apt -y install python3
+		logger BEEPINNINSTALL - Installing Python3
 	else
 		echo "python3 already installed..."
+		logger BEEPINNINSTALL - Python3 already installed
 	fi
 
 	if ! [ -x "$(command -v pip3)" ]; then
 		echo 'Installing pip3' >&2
 		sudo apt -y install python3-pip
+		logger BEEPINNINSTALL - Installing Pip3
 	else
 		echo "pip3 already installed..."
+		logger BEEPINNINSTALL - Pip3 already installed
 	fi
 
 	if ! [ -x "$(command -v cgps)" ]; then
 		echo 'Installing gpsd' >&2
 		sudo apt -y install gpsd gpsd-clients
+		logger BEEPINNINSTALL - Installing GPSD
 	else
 		echo "gpsd already installed..."
+		logger BEEPINNINSTALL - GPSD already installed
 	fi
 
 	if ! [ -x "$(command -v rtl_fm)" ]; then
 		echo "Installing rtl_sdr tools...." >&2
+		logger BEEPINNINSTALL - Installing rtl_sdr tools
 		echo "Installing cmake, sox, and usb tools for rtl_sdr" >&2
 		sudo apt -y install git cmake build-essential libusb-1.0-0-dev sox
+		logger BEEPINNINSTALL - Installing cmake things and sox
 		echo "Git\'ing files for rtl_sdr"
 		cd "/home/$SUDO_USER/" || exit
 		git clone git://git.osmocom.org/rtl-sdr.git
 		cd rtl-sdr/ || exit
 		echo "Building rtl_sdr"
+		logger BEEPINNINSTALL - Begin Build
 		mkdir build
 		cd build || exit
+		logger BEEPINNINSTALL - Build success
 		echo "Making built rtl_sdr"
 		cmake ../ -DINSTALL_UDEV_RULES=ON
+		logger BEEPINNINSTALL - Cmake success
 		make
 		echo "Completing rtl_sdr install"
 		sudo make install
+		logger BEEPINNINSTALL - Instal success
 		sudo ldconfig
 		echo "Copying common rtl_sdr rules to system"
 		sudo cp ../rtl-sdr.rules /etc/udev/rules.d
 		echo "Creating 28xxu rules"
 		echo "blacklist dvb_usb_rtl28xxu" | sudo tee -a /etc/modprobe.d/blacklist-rtl.conf
 		cd "$CURR" || exit
+		logger BEEPINNINSTALL - ldconfig and blacklist for rtlsdr success
 	else
 		echo "rtl_sdr already installed..."
+		logger BEEPINNINSTALL - rtl_sdr is already on this system
 	fi
 
 	# Now that everything apt is set up, we begin checking the pip packages.
@@ -113,16 +130,20 @@ before_reboot() {
 	python3 -c 'import numpy'
 	if [ $? != '0' ]; then
 		pip3 install numpy --user
+		logger BEEPINNINSTALL - Installing numpy
 	fi
 	echo "numpy version $(python3 -c 'import numpy; print(numpy.__version__)') is installed for python3"
+	logger BEEPINNINSTALL - numpy $(python3 -c 'import numpy; print(numpy.__version__)')
 
 	# Install matplotlib for more math things
 	# Tested with 3.0.2
 	python3 -c 'import matplotlib'
 	if [ $? != '0' ]; then
 		pip3 install matplotlib --user
+		logger BEEPINNINSTALL - Installing matplotlib
 	fi
 	echo "matplotlib version $(python3 -c 'import matplotlib; print(matplotlib.__version__)') installed for python3"
+	logger BEEPINNINSTALL - matplotlib $(python3 -c 'import matplotlib; print(matplotlib.__version__)')
 
 
 	# Peakutils is used to find our peaks
@@ -130,8 +151,10 @@ before_reboot() {
 	python3 -c 'import peakutils'
 	if [ $? != '0' ]; then
 		pip install PeakUtils --user
+		logger BEEPINNINSTALL - Installing peakutils
 	fi
 	echo "peakutils version $(python3 -c 'import peakutils; print(peakutils.__version__)') is installed for python3"
+	logger BEEPINNINSTALL - peakutils $(python3 -c 'import peakutils; print(peakutils.__version__)')
 
 
 	# Pyrtlsdr is what runs the sdr from python.
@@ -139,25 +162,29 @@ before_reboot() {
 	python3 -c 'import rtlsdr'
 	if [ $? != '0' ]; then
 		pip install pyrtlsdr --user
+		logger BEEPINNINSTALL - Installing pyrtlsdr
 	fi
 	echo "rtlsdr version $(python3 -c 'import rtlsdr; print(rtlsdr.__version__)') is installed for python3"
-
+	logger BEEPINNINSTALL - pyrtlsdr $(python3 -c 'import rtlsdr; print(rtlsdr.__version__)')
 
 	# We have to configure raspi-config to allow UART.
 	# This event requires restart
 	if grep -q -x enable_uart=1 /boot/config.txt; then
-		true
+		logger BEEPINNINSTALL - UART already enabled in /boot/config.txt
 	else
 		echo "enable_uart=1" | sudo tee -a /boot/config.txt
+		logger BEEPINNINSTALL - UART now enabled in /boot/config.txt
 	fi
 
 	# This is the rebooting portion
 	# It sets up a file in a secure place
 	sudo touch "/home/rebootflag.file"
 	echo "$DIR" | sudo tee /home/rebootflag.file
+	logger BEEPINNINSTALL - Rebootflag sent
 
 	# Writes startup script on the pi that runs this script if the rebootflag is found.
 	# Then adds the executable script to rc.local
+	logger BEEPINNINSTALL - rc.local mod and script will be written
 	sudo touch /etc/beep-inn-install.sh
 	cat >> sudo tee /etc/beep-inn-install.sh << EOF
 	#! /bin/sh
@@ -168,17 +195,21 @@ before_reboot() {
 		$DIR/INSTALL.sh
 	fi
 EOF
+	logger BEEPINNINSTALL - script created
 	# Make exectuable
 	sudo chmod +x /etc/beep-inn-install.sh
 	# Add to rc.local
 	sed 's/exit 0/sudo \/etc\/beep-inn-install.sh \&\nexit 0/g' /etc/rc.local | sudo tee /etc/rc.local
+	logger BEEPINNINSTALL - rc.local modded
 
 	# Force reboot
+	logger BEEPINNINSTALL - Time to reboot
 	sudo reboot
 }
 
 
 after_reboot() {
+	logger BEEPINNINSTALL - Post-reboot init
 	echo ""
 	echo "********************************************************"
 	echo "*                                                      *"
@@ -198,16 +229,23 @@ after_reboot() {
 	# Then applies the appropriate methods
 	# Requires a reboot prior to running this.
 	sudo killall gpsd
+	logger BEEPINNINSTALL - killed gpsd procs
 	if (( $(sed -e "s/[^0-9]*//g" '/proc/device-tree/model' | cut -c-1) < '3' )); then
+		logger BEEPINNINSTALL - This is not a Pi 3
 		sudo gpsd /dev/ttyAMA0 -F /var/run/gpsd.sock
+		logger BEEPINNINSTALL - gpsd socket aligned in the old manner
 	else
+		logger BEEPINNINSTALL - This is a Pi 3
 		sudo gpsd /dev/serial0 -F /var/run/gpsd.sock
+		logger BEEPINNINSTALL - gpsd socket aligned in the new way
 	fi
 	sudo rm "/home/rebootflag.file"
+	logger BEEPINNINSTALL - rebootflag cleanup
 	echo "You should be ready to run your Beep_Inn software"
 }
 
 # Run program
+logger BEEPINNINSTALL - Executing INSTALL.sh
 check_boot
 
 
