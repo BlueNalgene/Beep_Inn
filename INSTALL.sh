@@ -16,19 +16,18 @@ if [[ $UID != 0 ]]; then
 fi
 
 CURR=$(pwd)
-CONFIG=/boot/config.txt
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-check_boot{
+check_boot() {
 	if [ ! -f '/home/rebootflag.file' ]; then
-		$(before_reboot)
+		before_reboot
 	else
-		$(after_reboot)
-	fi
+		after_reboot
+	fi;
 }
 
 
-before_reboot{
+before_reboot() {
 	echo ""
 	echo "********************************************************"
 	echo "*                                                      *"
@@ -87,12 +86,12 @@ before_reboot{
 		echo "Installing cmake, sox, and usb tools for rtl_sdr" >&2
 		sudo apt -y install git cmake build-essential libusb-1.0-0-dev sox
 		echo "Git\'ing files for rtl_sdr"
-		cd /home/$USER/
+		cd "/home/$USER/" || exit
 		git clone git://git.osmocom.org/rtl-sdr.git
-		cd rtl-sdr/
+		cd rtl-sdr/ || exit
 		echo "Building rtl_sdr"
 		mkdir build
-		cd build
+		cd build || exit
 		echo "Making built rtl_sdr"
 		cmake ../ -DINSTALL_UDEV_RULES=ON
 		make
@@ -103,7 +102,7 @@ before_reboot{
 		sudo cp ../rtl-sdr.rules /etc/udev/rules.d
 		echo "Creating 28xxu rules"
 		echo "blacklist dvb_usb_rtl28xxu" | sudo tee -a /etc/modprobe.d/blacklist-rtl.conf
-		cd $CURR
+		cd "$CURR" || exit
 	else
 		echo "rtl_sdr already installed..."
 	fi
@@ -146,7 +145,7 @@ before_reboot{
 
 	# We have to configure raspi-config to allow UART.
 	# This event requires restart
-	if [[ $(cat /boot/config.txt | grep -x enable_uart=1) ]]; then
+	if grep -q -x enable_uart=1 /boot/config.txt; then
 		true
 	else
 		echo "enable_uart=1" | sudo tee -a /boot/config.txt
@@ -160,7 +159,7 @@ before_reboot{
 	# Writes startup script on the pi that runs this script if the rebootflag is found.
 	# Then adds the executable script to rc.local
 	sudo touch /etc/beep-inn-install.sh
-	sudo cat >> /etc/beep-inn-install.sh << EOF
+	cat >> sudo tee /etc/beep-inn-install.sh << EOF
 #! /bin/sh
 
 if [ ! -f '/home/rebootflag.file' ]; then
@@ -172,14 +171,14 @@ EOF
 	# Make exectuable
 	sudo chmod +x /etc/beep-inn-install.sh
 	# Add to rc.local
-	cat /etc/rc.local | sed 's/exit 0/sudo \/etc\/beep-inn-install.sh \&\nexit 0/g' | sudo tee /etc/rc.local
+	sed 's/exit 0/sudo \/etc\/beep-inn-install.sh \&\nexit 0/g' /etc/rc.local | sudo tee /etc/rc.local
 
 	# Force reboot
 	sudo reboot
 }
 
 
-after_reboot{
+after_reboot() {
 	echo ""
 	echo "********************************************************"
 	echo "*                                                      *"
@@ -199,7 +198,7 @@ after_reboot{
 	# Then applies the appropriate methods
 	# Requires a reboot prior to running this.
 	sudo killall gpsd
-	if (( $(cat '/proc/device-tree/model' | sed -e "s/[^0-9]*//g" | cut -c-1) < '3' )); then
+	if (( $(sed -e "s/[^0-9]*//g" '/proc/device-tree/model' | cut -c-1) < '3' )); then
 		sudo gpsd /dev/ttyAMA0 -F /var/run/gpsd.sock
 	else
 		sudo gpsd /dev/serial0 -F /var/run/gpsd.sock
@@ -209,7 +208,7 @@ after_reboot{
 }
 
 # Run program
-$(check_boot)
+check_boot
 
 
 
