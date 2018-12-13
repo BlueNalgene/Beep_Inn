@@ -54,6 +54,10 @@ before_reboot() {
 	# Get Up-to-date packages
 	sudo apt -y upgrade
 
+	# First things first, make sure Raspbian didn't come packaged with numpy.  That always breaks things.
+	logger BEEPINNINSTALL - Attempting to remove default python3-numpy from apt.
+	sudo apt remove -y python3-numpy
+
 	if ! [ -x "$(command -v git)" ]; then
 		echo 'Installing git (how did you get this file?)' >&2
 		sudo apt -y install git
@@ -186,14 +190,13 @@ before_reboot() {
 	# Then adds the executable script to rc.local
 	logger BEEPINNINSTALL - rc.local mod and script will be written
 	sudo touch /etc/beep-inn-install.sh
-	cat >> sudo tee /etc/beep-inn-install.sh << EOF
-	#! /bin/sh
-
-	if [ ! -f '/home/rebootflag.file' ]; then
-		logger beep-inn-install.sh was run at startup, but did not find rebootflag.file
-	else
-		$DIR/INSTALL.sh
-	fi
+	 sudo tee /etc/beep-inn-install.sh << EOF
+#! /bin/sh
+if [ ! -f '/home/rebootflag.file' ]; then
+	logger beep-inn-install.sh was run at startup, but did not find rebootflag.file
+else
+	$DIR/INSTALL.sh
+fi
 EOF
 	logger BEEPINNINSTALL - script created
 	# Make exectuable
