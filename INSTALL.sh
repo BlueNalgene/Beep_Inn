@@ -202,7 +202,11 @@ if [ ! -f '/home/rebootflag.file' ]; then
 	logger beep-inn-install.sh was run at startup, but did not find rebootflag.file
 else
 	$DIR/INSTALL.sh
+	sudo rm /home/rebootflag.file
+	sed 's/sudo \/etc\/beep-inn-install.sh//g' /home/wes/magic.local | sudo tee /home/wes/magic.local
+	sudo rm /etc/beep-inn-install.sh
 fi
+exit 0
 EOF
 	logger BEEPINNINSTALL - script created
 	# Make exectuable
