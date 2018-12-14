@@ -203,9 +203,13 @@ before_reboot() {
 if [ ! -f '/home/rebootflag.file' ]; then
 	logger beep-inn-install.sh was run at startup, but did not find rebootflag.file
 else
+	logger BEEPINNINSTALL - Reboot ack, running script
 	$DIR/INSTALL.sh
+	logger BEEPINNINSTALL - cleanup flag
 	sudo rm /home/rebootflag.file
+	logger BEEPINNINSTALL - cleanup rc.local
 	sed 's/sudo \/etc\/beep-inn-install.sh//g' /home/wes/magic.local | sudo tee /home/wes/magic.local
+	logger BEEPINNINSTALL - cleanup self
 	sudo rm /etc/beep-inn-install.sh
 fi
 exit 0
