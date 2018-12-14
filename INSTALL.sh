@@ -128,6 +128,12 @@ before_reboot() {
 		logger BEEPINNINSTALL - rtl_sdr is already on this system
 	fi
 
+	# We need to get rid of conflicting numpy version of default pi from apt.
+	sudo apt -y remove python3-numpy
+	# Instead, we need to have the wheel-maker set up for pip3
+	sudo apt -y install libatlas3-base
+	logger BEEPINNINSTALL - removed apt numpy version and added libatlas3-base
+
 	# Now that everything apt is set up, we begin checking the pip packages.
 	# Numpy is required for much of the array math
 	# Tested with 1.15.4
