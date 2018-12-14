@@ -201,8 +201,10 @@ EOF
 	logger BEEPINNINSTALL - script created
 	# Make exectuable
 	sudo chmod +x /etc/beep-inn-install.sh
-	# Add to rc.local
-	sed 's/exit 0/sudo \/etc\/beep-inn-install.sh \&\nexit 0/g' /etc/rc.local | sudo tee /etc/rc.local
+	# Add to rc.local if we haven't done this before.
+	if ! grep -x 'sudo /etc/beep-inn-install.sh &' /home/wes/magic.local; then
+		sed '/^#/!s/exit 0/sudo \/etc\/beep-inn-install.sh \&\nexit 0/g' /home/wes/magic.local | sudo tee /	home/wes/magic.local
+	fi
 	logger BEEPINNINSTALL - rc.local modded
 
 	# Force reboot
