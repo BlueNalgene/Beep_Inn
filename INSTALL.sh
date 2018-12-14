@@ -162,7 +162,7 @@ before_reboot() {
 	# Tested with 1.3.0
 	python3 -c 'import peakutils'
 	if [ $? != '0' ]; then
-		pip install PeakUtils --user
+		pip3 install PeakUtils --user
 		logger BEEPINNINSTALL - Installing peakutils
 	fi
 	echo "peakutils version $(python3 -c 'import peakutils; print(peakutils.__version__)') is installed for python3"
@@ -173,7 +173,7 @@ before_reboot() {
 	# Tested with 0.2.9
 	python3 -c 'import rtlsdr'
 	if [ $? != '0' ]; then
-		pip install pyrtlsdr --user
+		pip3 install pyrtlsdr --user
 		logger BEEPINNINSTALL - Installing pyrtlsdr
 	fi
 	echo "rtlsdr version $(python3 -c 'import rtlsdr; print(rtlsdr.__version__)') is installed for python3"
