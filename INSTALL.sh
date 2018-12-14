@@ -200,6 +200,7 @@ before_reboot() {
 	sudo touch /etc/beep-inn-install.sh
 	 sudo tee /etc/beep-inn-install.sh << EOF
 #! /bin/sh
+logger BEEPINNINSTALL - running beep-inn-install.sh
 if [ ! -f '/home/rebootflag.file' ]; then
 	logger beep-inn-install.sh was run at startup, but did not find rebootflag.file
 else
@@ -218,8 +219,8 @@ EOF
 	# Make exectuable
 	sudo chmod +x /etc/beep-inn-install.sh
 	# Add to rc.local if we haven't done this before.
-	if ! grep -x 'sudo /etc/beep-inn-install.sh &' /home/wes/magic.local; then
-		sed '/^#/!s/exit 0/sudo \/etc\/beep-inn-install.sh \&\nexit 0/g' /home/wes/magic.local | sudo tee /home/wes/magic.local
+	if ! grep -x 'sudo /etc/beep-inn-install.sh &' /etc/rc.local; then
+		sed '/^#/!s/exit 0/sudo \/etc\/beep-inn-install.sh \&\nexit 0/g' /etc/rc.local | sudo tee /etc/rc.local
 	fi
 	logger BEEPINNINSTALL - rc.local modded
 
