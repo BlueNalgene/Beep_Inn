@@ -244,6 +244,23 @@ EOF
 	fi
 	logger BEEPINNINSTALL - rc.local modded
 
+	# Desktop shortcut
+	touch /home/$USER/Beep_Inn
+	tee /home/$USER/Beep_Inn << EOF
+[Desktop Entry]
+Name=Beep_Inn
+Comment=Activates the Beep_Inn script
+Icon=/usr/share/pixmaps/python3.xpm
+EOF
+	ESTRING="Exec=python3 $DIR/beep_inn_main.py -f $DIR/input_frequency_example.txt"
+	echo $ESTRING >> /home/$USER/Beep_Inn
+	tee /home/$USER/Beep_Inn << EOF
+Type=Application
+Encoding=UTF-8
+Terminal=true
+Categories=None;
+EOF
+
 	# Force reboot
 	logger BEEPINNINSTALL - Time to reboot
 	sudo reboot
