@@ -129,12 +129,13 @@ before_reboot() {
 	fi
 
 	# We need to get rid of conflicting numpy version of default pi from apt.
-	sudo apt -y remove python3-numpy
+ 	#sudo apt -y remove python3-numpy
 	# Instead, we need to have the wheel-maker set up for pip3
 	sudo apt -y install libatlas3-base
 	# We also need scipy installed, but the previous lines tend to mess with that
 	sudo apt -y install python3-scipy
-	logger BEEPINNINSTALL - removed apt numpy version and added libatlas3-base
+ 	#logger BEEPINNINSTALL - removed apt numpy version and added libatlas3-base
+ 	logger BEEPINNINSTALL - added libatlas3-base, scipy
 
 	# Now that everything apt is set up, we begin checking the pip packages.
 	# Numpy is required for much of the array math

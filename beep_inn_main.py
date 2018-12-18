@@ -12,17 +12,18 @@ from __future__ import print_function
 
 # Standard Imports
 import os
+from shutil import copyfile
 #import sys
 import time
 import traceback
 
 # Non-standard Imports
 
-
 # Local Imports
 from Beep_Inn_Classes import Arg, Config, Clockset, RTLSDR
 
 RADIO = RTLSDR.SDR_Tools()
+STARTTIME = int(time.time())
 
 def main(hzfile, guiswitch):
 	'''Main print_function
@@ -48,6 +49,9 @@ if __name__ == '__main__':
 	Config.Configurator()
 	#if arg.rtcgetter:
 		#Clockset.rtc()
+	if not os.path.isdir("/media/BEEPDRIV"):
+		print("ERROR: no usb drive found at /media/BEEPDRIV")
+		quit()
 	try:
 		main(arg.filename, arg.gui)
 	except KeyboardInterrupt:
@@ -57,4 +61,6 @@ if __name__ == '__main__':
 		raise # reraises the exception
 	finally:
 		RADIO.close_sdr()
+		copyfile(str(os.path.dirname(os.path.abspath(__file__)) + '/temp.csv'), \
+			str('/media/BEEPDRIV/' + STARTTIME + '.csv'))
 		quit()
