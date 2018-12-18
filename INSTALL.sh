@@ -19,7 +19,7 @@ CURR=$(pwd)
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 check_boot() {
-	if [ ! -f '/home/rebootflag.file' ]; then
+	if [ ! -f '/etc/rebootflag.file' ]; then
 		before_reboot
 	else
 		after_reboot
@@ -180,6 +180,25 @@ before_reboot() {
 	echo "rtlsdr version $(python3 -c 'import rtlsdr; print(rtlsdr.__version__)') is installed for python3"
 	logger BEEPINNINSTALL - pyrtlsdr $(python3 -c 'import rtlsdr; print(rtlsdr.__version__)')
 
+	# GPS runs GPS from python.
+	# Tested with 3.9
+	python3 -c 'import gps'
+	if [ $? != '0' ]; then
+		pip3 install --user gps
+		logger BEEPINNINSTALL - Installing gps
+	fi
+	logger BEEPINNINSTALL - gps
+
+	# Pyrtlsdr is what runs the sdr from python.
+	# Tested with 0.2.9
+	python3 -c 'import gps_py3_shim'
+	if [ $? != '0' ]; then
+		pip3 install --user gps-py3-shim
+		logger BEEPINNINSTALL - Installing pyrtlsdr
+	fi
+	logger BEEPINNINSTALL - gps_py3_shim
+
+
 	# We have to configure raspi-config to allow UART.
 	# This event requires restart
 	if grep -q -x enable_uart=1 /boot/config.txt; then
@@ -191,8 +210,8 @@ before_reboot() {
 
 	# This is the rebooting portion
 	# It sets up a file in a secure place
-	sudo touch "/home/rebootflag.file"
-	echo "$DIR" | sudo tee /home/rebootflag.file
+	sudo touch "/etc/rebootflag.file"
+	echo "$DIR" | sudo tee /etc/rebootflag.file
 	logger BEEPINNINSTALL - Rebootflag sent
 
 	# Writes startup script on the pi that runs this script if the rebootflag is found.
@@ -202,15 +221,15 @@ before_reboot() {
 	 sudo tee /etc/beep-inn-install.sh << EOF
 #! /bin/sh
 logger BEEPINNINSTALL - running beep-inn-install.sh
-if [ ! -f '/home/rebootflag.file' ]; then
+if [ ! -f '/etc/rebootflag.file' ]; then
 	logger beep-inn-install.sh was run at startup, but did not find rebootflag.file
 else
 	logger BEEPINNINSTALL - Reboot ack, running script
 	$DIR/INSTALL.sh
 	logger BEEPINNINSTALL - cleanup flag
-	sudo rm /home/rebootflag.file
+	sudo rm /etc/rebootflag.file
 	logger BEEPINNINSTALL - cleanup rc.local
-	sed 's/sudo \/etc\/beep-inn-install.sh//g' /home/wes/magic.local | sudo tee /home/wes/magic.local
+	sed 's/sudo \/etc\/beep-inn-install.sh//g' /etc/rc.local | sudo tee /etc/rc.local
 	logger BEEPINNINSTALL - cleanup self
 	sudo rm /etc/beep-inn-install.sh
 fi
@@ -262,8 +281,6 @@ after_reboot() {
 		sudo gpsd /dev/serial0 -F /var/run/gpsd.sock
 		logger BEEPINNINSTALL - gpsd socket aligned in the new way
 	fi
-	sudo rm "/home/rebootflag.file"
-	logger BEEPINNINSTALL - rebootflag cleanup
 	echo "You should be ready to run your Beep_Inn software"
 }
 
