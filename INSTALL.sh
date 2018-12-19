@@ -18,15 +18,6 @@ fi
 CURR=$(pwd)
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-check_boot() {
-	if [ ! -f '/etc/rebootflag.file' ]; then
-		before_reboot
-	else
-		after_reboot
-	fi;
-}
-
-
 before_reboot() {
 	logger BEEPINNINSTALL - Init
 	echo ""
@@ -83,15 +74,6 @@ before_reboot() {
 	else
 		echo "pip3 already installed..."
 		logger BEEPINNINSTALL - Pip3 already installed
-	fi
-
-	if ! [ -x "$(command -v cgps)" ]; then
-		echo 'Installing gpsd' >&2
-		sudo apt -y install gpsd gpsd-clients
-		logger BEEPINNINSTALL - Installing GPSD
-	else
-		echo "gpsd already installed..."
-		logger BEEPINNINSTALL - GPSD already installed
 	fi
 
 	if ! [ -x "$(command -v rtl_fm)" ]; then
@@ -163,7 +145,7 @@ before_reboot() {
 	# Tested with 1.3.0
 	python3 -c 'import peakutils'
 	if [ $? != '0' ]; then
-		pip3 install --user PeakUtils
+		pip3 install --user peakutils
 		logger BEEPINNINSTALL - Installing peakutils
 	fi
 	echo "peakutils version $(python3 -c 'import peakutils; print(peakutils.__version__)') is installed for python3"
@@ -180,25 +162,6 @@ before_reboot() {
 	echo "rtlsdr version $(python3 -c 'import rtlsdr; print(rtlsdr.__version__)') is installed for python3"
 	logger BEEPINNINSTALL - pyrtlsdr $(python3 -c 'import rtlsdr; print(rtlsdr.__version__)')
 
-	# GPS runs GPS from python.
-	# Tested with 3.9
-	python3 -c 'import gps'
-	if [ $? != '0' ]; then
-		pip3 install --user gps
-		logger BEEPINNINSTALL - Installing gps
-	fi
-	logger BEEPINNINSTALL - gps
-
-	# Pyrtlsdr is what runs the sdr from python.
-	# Tested with 0.2.9
-	python3 -c 'import gps_py3_shim'
-	if [ $? != '0' ]; then
-		pip3 install --user gps-py3-shim
-		logger BEEPINNINSTALL - Installing pyrtlsdr
-	fi
-	logger BEEPINNINSTALL - gps_py3_shim
-
-
 	# We have to configure raspi-config to allow UART.
 	# This event requires restart
 	if grep -q -x enable_uart=1 /boot/config.txt; then
@@ -207,42 +170,6 @@ before_reboot() {
 		echo "enable_uart=1" | sudo tee -a /boot/config.txt
 		logger BEEPINNINSTALL - UART now enabled in /boot/config.txt
 	fi
-
-	# This is the rebooting portion
-	# It sets up a file in a secure place
-	sudo touch "/etc/rebootflag.file"
-	echo "$DIR" | sudo tee /etc/rebootflag.file
-	logger BEEPINNINSTALL - Rebootflag sent
-
-	# Writes startup script on the pi that runs this script if the rebootflag is found.
-	# Then adds the executable script to rc.local
-	logger BEEPINNINSTALL - rc.local mod and script will be written
-	sudo touch /etc/beep-inn-install.sh
-	 sudo tee /etc/beep-inn-install.sh << EOF
-#! /bin/sh
-logger BEEPINNINSTALL - running beep-inn-install.sh
-if [ ! -f '/etc/rebootflag.file' ]; then
-	logger beep-inn-install.sh was run at startup, but did not find rebootflag.file
-else
-	logger BEEPINNINSTALL - Reboot ack, running script
-	$DIR/INSTALL.sh
-	logger BEEPINNINSTALL - cleanup flag
-	sudo rm /etc/rebootflag.file
-	logger BEEPINNINSTALL - cleanup rc.local
-	sed 's/sudo \/etc\/beep-inn-install.sh//g' /etc/rc.local | sudo tee /etc/rc.local
-	logger BEEPINNINSTALL - cleanup self
-	sudo rm /etc/beep-inn-install.sh
-fi
-exit 0
-EOF
-	logger BEEPINNINSTALL - script created
-	# Make exectuable
-	sudo chmod +x /etc/beep-inn-install.sh
-	# Add to rc.local if we haven't done this before.
-	if ! grep -x 'sudo /etc/beep-inn-install.sh &' /etc/rc.local; then
-		sed '/^#/!s/exit 0/sudo \/etc\/beep-inn-install.sh \&\nexit 0/g' /etc/rc.local | sudo tee /etc/rc.local
-	fi
-	logger BEEPINNINSTALL - rc.local modded
 
 	# Desktop shortcut
 	touch /home/$USER/Beep_Inn
@@ -266,44 +193,9 @@ EOF
 	sudo reboot
 }
 
-
-after_reboot() {
-	logger BEEPINNINSTALL - Post-reboot init
-	echo ""
-	echo "********************************************************"
-	echo "*                                                      *"
-	echo "*                                                      *"
-	echo "*  Now continuing to run the Beep_Inn install script   *"
-	echo "*            Please continue to be patient             *"
-	echo "*                          &                           *"
-	echo "*              enjoy your hot beverage                 *"
-	echo "*                                                      *"
-	echo "*                                   With <3,           *"
-	echo "*                                     Beep_Inn Devs    *"
-	echo "*                                                      *"
-	echo "********************************************************"
-	sleep 1
-	# Enable things for the GPS to work.
-	# This first checks the hardware version of the RPi,
-	# Then applies the appropriate methods
-	# Requires a reboot prior to running this.
-	sudo killall gpsd
-	logger BEEPINNINSTALL - killed gpsd procs
-	if (( $(sed -e "s/[^0-9]*//g" '/proc/device-tree/model' | cut -c-1) < '3' )); then
-		logger BEEPINNINSTALL - This is not a Pi 3
-		sudo gpsd /dev/ttyAMA0 -F /var/run/gpsd.sock
-		logger BEEPINNINSTALL - gpsd socket aligned in the old manner
-	else
-		logger BEEPINNINSTALL - This is a Pi 3
-		sudo gpsd /dev/serial0 -F /var/run/gpsd.sock
-		logger BEEPINNINSTALL - gpsd socket aligned in the new way
-	fi
-	echo "You should be ready to run your Beep_Inn software"
-}
-
 # Run program
 logger BEEPINNINSTALL - Executing INSTALL.sh
-check_boot
+before_reboot
 
 
 

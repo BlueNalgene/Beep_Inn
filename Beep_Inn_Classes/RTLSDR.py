@@ -162,9 +162,9 @@ class SDR_Tools():
 		If it is, gets coordinates from gpsd.
 		Sends as string.
 		'''
-		import gps
+		import gps_py3_shim
 		# Listen on port 2947 (gpsd) of localhost
-		session = gps.gps("localhost", "2947")
+		session = gps_py3_shim.gps("localhost", "2947")
 		session.stream(gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
 		
 		while True:
