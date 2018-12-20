@@ -141,17 +141,6 @@ before_reboot() {
 	logger BEEPINNINSTALL - matplotlib $(python3 -c 'import matplotlib; print(matplotlib.__version__)')
 
 
-	# Peakutils is used to find our peaks
-	# Tested with 1.3.0
-	python3 -c 'import peakutils'
-	if [ $? != '0' ]; then
-		pip3 install --user peakutils
-		logger BEEPINNINSTALL - Installing peakutils
-	fi
-	echo "peakutils version $(python3 -c 'import peakutils; print(peakutils.__version__)') is installed for python3"
-	logger BEEPINNINSTALL - peakutils $(python3 -c 'import peakutils; print(peakutils.__version__)')
-
-
 	# Pyrtlsdr is what runs the sdr from python.
 	# Tested with 0.2.9
 	python3 -c 'import rtlsdr'

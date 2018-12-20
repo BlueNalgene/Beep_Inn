@@ -20,11 +20,10 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 #import scipy.signal as sig
-import peakutils
 
 # Local Imports
 from rtlsdr import RtlSdr
-from . import Config
+from . import Config, Detect_Peaks
 
 class SDR_Tools():
 	'''RTLSDR class handles all of the SDR related commands
@@ -129,7 +128,8 @@ class SDR_Tools():
 		plt.ylabel('Relative power (dB)')
 		plt.ylim(-50, 10)
 		# We find local peaks from the intensity 1D
-		peaks = peakutils.indexes(intense, thres=self.thresh/max(intense), min_dist=self.pkdist)
+		peaks = Detect_Peaks.detect_peaks(intense, threshold=self.thresh/max(intense),\
+			mpd=self.pkdist, show=False)
 
 		lowvals = []
 		for i in intense:
