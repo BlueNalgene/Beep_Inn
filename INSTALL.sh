@@ -128,7 +128,7 @@ before_reboot() {
 		logger BEEPINNINSTALL - Installing numpy
 	fi
 	echo "numpy version $(python3 -c 'import numpy; print(numpy.__version__)') is installed for python3"
-	logger BEEPINNINSTALL - numpy $(python3 -c 'import numpy; print(numpy.__version__)')
+	logger BEEPINNINSTALL - numpy "$(python3 -c 'import numpy; print(numpy.__version__)')"
 
 	# Install matplotlib for more math things
 	# Tested with 3.0.2
@@ -138,7 +138,7 @@ before_reboot() {
 		logger BEEPINNINSTALL - Installing matplotlib
 	fi
 	echo "matplotlib version $(python3 -c 'import matplotlib; print(matplotlib.__version__)') installed for python3"
-	logger BEEPINNINSTALL - matplotlib $(python3 -c 'import matplotlib; print(matplotlib.__version__)')
+	logger BEEPINNINSTALL - matplotlib "$(python3 -c 'import matplotlib; print(matplotlib.__version__)')"
 
 
 	# Pyrtlsdr is what runs the sdr from python.
@@ -149,7 +149,7 @@ before_reboot() {
 		logger BEEPINNINSTALL - Installing pyrtlsdr
 	fi
 	echo "rtlsdr version $(python3 -c 'import rtlsdr; print(rtlsdr.__version__)') is installed for python3"
-	logger BEEPINNINSTALL - pyrtlsdr $(python3 -c 'import rtlsdr; print(rtlsdr.__version__)')
+	logger BEEPINNINSTALL - pyrtlsdr "$(python3 -c 'import rtlsdr; print(rtlsdr.__version__)')"
 
 	# We have to configure raspi-config to allow UART.
 	# This event requires restart
@@ -161,16 +161,16 @@ before_reboot() {
 	fi
 
 	# Desktop shortcut
-	touch /home/$USER/Beep_Inn
-	tee /home/$USER/Beep_Inn << EOF
+	touch "/home/$USER/Beep_Inn"
+	tee "/home/$USER/Beep_Inn" << EOF
 [Desktop Entry]
 Name=Beep_Inn
 Comment=Activates the Beep_Inn script
 Icon=/usr/share/pixmaps/python3.xpm
 EOF
 	ESTRING="Exec=python3 $DIR/beep_inn_main.py -f $DIR/input_frequency_example.txt"
-	echo $ESTRING >> /home/$USER/Beep_Inn
-	tee /home/$USER/Beep_Inn << EOF
+	echo "$ESTRING" >> "/home/$USER/Beep_Inn"
+	tee "/home/$USER/Beep_Inn" << EOF
 Type=Application
 Encoding=UTF-8
 Terminal=true

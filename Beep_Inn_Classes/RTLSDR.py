@@ -11,21 +11,18 @@ from __future__ import print_function
 # Standard Imports
 import math
 import statistics as stats
-import sys
 import time
 
 # Non-standard Imports
-#from pylab import psd, xlabel, ylabel, show, waitforbuttonpress
-import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-#import scipy.signal as sig
 
 # Local Imports
 from rtlsdr import RtlSdr
-from . import Config, Detect_Peaks
+import Config
+import Detect_Peaks
 
-class SDR_Tools():
+class SDRTools():
 	'''RTLSDR class handles all of the SDR related commands
 	'''
 	# Define the source we are using in everything here.
@@ -57,7 +54,7 @@ class SDR_Tools():
 		# Make sure our counter is at zero when we startup
 		self.cnt = 0
 		# Init an animate-able plot with axes
-		self.fig.add_subplot(1,1,1)
+		self.fig.add_subplot(1, 1, 1)
 		plt.xlabel('Frequency (MHz)')
 		plt.ylabel('Relative power (dB)')
 		# Write a new temporary output file
@@ -139,16 +136,15 @@ class SDR_Tools():
 		for i in peaks:
 			peakhgt = 10*math.log10(intense[i])
 			low = 10*math.log10(stats.median(lowvals))
-			peakfreq = figure[i]
 			print(lowvals)
-			self.record_values(low, peaks, figure[i], peakhgt)
+			self.record_values(low, figure[i], peakhgt)
 		# Put the figure in the image storage hole.  This can really be done in one step, but
 		# this is done in case we want to doctor "figure" during the cycle"
 		self.image = figure
 		self.backup_csv()
 		return
 
-	def record_values(self, low, peaks, peakfreq, peakhgt):
+	def record_values(self, low, peakfreq, peakhgt):
 		'''Records the values as we go along.
 		Puts things into a temporary csv file.
 		If there is a 'hit', the hit logged in a column.
@@ -164,14 +160,15 @@ class SDR_Tools():
 		If it is, gets coordinates from gpsd.
 		Sends as string.
 		'''
-		import serial
 		import calendar
+		import datetime
+		import serial
 
 		gptime = ''
 		gplong = ''
 		gplati = ''
 		while not (gptime and gplong and gplati):
-			with open serial.Serial('/dev/ttyAMA0', 9600, timeout=1) as ser:
+			with open(serial.Serial('/dev/ttyAMA0', 9600, timeout=1)) as ser:
 				line = ser.readline()
 				# $GPZDA,hhmmss.ss,dd,mm,yyyy,xx,yy*CC
 				#where:
@@ -185,7 +182,8 @@ class SDR_Tools():
 					convunix = convunix[0:2] + ',' + convunix[2:4] + ',' + convunix[4:]
 					# "%Y:%m:%d %H:%M:%S"
 					#time.mktime(datetime.datetime.strptime(convunix, "%H,%M,%S.%f,%d,%m,%Y").timetuple())
-					gptime = calendar.timegm(datetime.datetime.strptime(convunix, "%H,%M,%S.%f,%d,%m,%Y").timetuple())
+					gptime = calendar.timegm(datetime.datetime.strptime(convunix,\
+						"%H,%M,%S.%f,%d,%m,%Y").timetuple())
 				else:
 					pass
 				# $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
@@ -216,38 +214,45 @@ class SDR_Tools():
 					gplong = line[31:39]
 				else:
 					pass
-			print(gptime) if gptime else print("WAITING...")
-			print(gplong) if gplong else print("WAITING...")
-			print(gplati) if gplati else print("WAITING...")
+			if gptime:
+				print(gptime)
+			else:
+				print("WAITING...")
+			if gplong:
+				print(gplong)
+			else:
+				print("WAITING...")
+			if gplati:
+				print(gplati)
+			else:
+				print("WAITING...")
 		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
-			fff.write(Lat, Lon, Corrected Start time)
+			fff.write("Lat, Lon, Corrected Start time")
 			fff.write(gplati, gplong, gptime)
 			fff.write('Time(s, UTC, unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
 		self.gpstimestart = gptime
 		return
 
 	def backup_csv(self):
-		'''This function determines the amount of time which has passed since the start.  If it has passed a
-		certain threshold, it calls a function to save the temp.csv to the thumbdrive.
+		'''This function determines the amount of time which has passed since the start.
+		If it has passed a certain threshold, it calls a function to save the temp.csv to the thumbdrive.
 		'''
 		# Check if time difference is 10 minutes.
 		if (int(time.time()) - int(self.gpstimestart))/self.backupcount > 600:
 			ret = self.perform_save
 			if ret == 1:
 				self.backupcount += 1
-				pass
 			else:
 				print("Something went wrong backing up the file")
-				pass
 		return
 
 	def perform_save(self):
 		''' This function backs up the file from temporary to permanent storage.
 		This is called by backup_csv, and called once directly during shutdown
 		'''
+		from shutil import copyfile
 		if self.gpstimestart:
 			copyfile(str(self.cfg.localpath() + '/temp.csv'), \
 				str('/media/BEEPDRIV/' + self.gpstimestart + '.csv'))
 			return 1
-		else:
-			return 0
+		return 0

@@ -12,7 +12,6 @@ from __future__ import print_function
 
 # Standard Imports
 import os
-from shutil import copyfile
 #import sys
 import time
 import traceback
@@ -20,9 +19,9 @@ import traceback
 # Non-standard Imports
 
 # Local Imports
-from Beep_Inn_Classes import Arg, Config, Clockset, RTLSDR
+from Beep_Inn_Classes import Arg, Config, RTLSDR
 
-RADIO = RTLSDR.SDR_Tools()
+RADIO = RTLSDR.SDRTools()
 
 def main(hzfile, guiswitch):
 	'''Main print_function
@@ -31,7 +30,7 @@ def main(hzfile, guiswitch):
 	hzlist = RADIO.rtl_settings(hzfile)
 	# Send GUI info
 	RADIO.is_gui(guiswitch)
-	
+	cnt = 0
 
 	while True:
 		# Lazy try/except to start count
