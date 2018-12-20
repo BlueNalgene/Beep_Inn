@@ -23,7 +23,6 @@ import traceback
 from Beep_Inn_Classes import Arg, Config, Clockset, RTLSDR
 
 RADIO = RTLSDR.SDR_Tools()
-STARTTIME = int(time.time())
 
 def main(hzfile, guiswitch):
 	'''Main print_function
@@ -61,6 +60,5 @@ if __name__ == '__main__':
 		raise # reraises the exception
 	finally:
 		RADIO.close_sdr()
-		copyfile(str(os.path.dirname(os.path.abspath(__file__)) + '/temp.csv'), \
-			str('/media/BEEPDRIV/' + STARTTIME + '.csv'))
+		RADIO.perform_save()
 		quit()

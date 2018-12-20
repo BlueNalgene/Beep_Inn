@@ -35,13 +35,16 @@ class SDR_Tools():
 
 	# Local variable(s)
 	cnt = ''
+	backupcount = 1
 	fig = plt.figure()
 	image = -100*np.ones((100, 1024))
 	samples = []
 	gui_switch = False
 	csv_switch = False
+	gpstimestart = ''
 
 	# Plotting Variables
+	# Values are pulled from config file.
 	nfft = int(cfg.value('Plot_Values', 'nfft_count'))
 	samp = int(cfg.value('Plot_Values', 'samplemod_count'))
 	thresh = float(cfg.value('Plot_Values', 'peakthresh'))
@@ -59,9 +62,7 @@ class SDR_Tools():
 		plt.xlabel('Frequency (MHz)')
 		plt.ylabel('Relative power (dB)')
 		# Write a new temporary output file
-		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
-			#fff.write(self.gpscoord)
-			fff.write('Time(s, UTC, unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
+		self.gpscoord()
 		return
 
 	def is_gui(self, guiarg):
@@ -144,6 +145,7 @@ class SDR_Tools():
 		# Put the figure in the image storage hole.  This can really be done in one step, but
 		# this is done in case we want to doctor "figure" during the cycle"
 		self.image = figure
+		self.backup_csv()
 		return
 
 	def record_values(self, low, peaks, peakfreq, peakhgt):
@@ -162,24 +164,90 @@ class SDR_Tools():
 		If it is, gets coordinates from gpsd.
 		Sends as string.
 		'''
-		import gps_py3_shim
-		# Listen on port 2947 (gpsd) of localhost
-		session = gps_py3_shim.gps("localhost", "2947")
-		session.stream(gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
-		
-		while True:
-			try:
-				report = session.next()
-				# Wait for a 'TPV' report and display the current time
-				# To see all report data, uncomment the line below
-				# print(report)
-				if report['class'] == 'TPV':
-					if hasattr(report, 'time'):
-						print(report.time)
-			except KeyError:
+		import serial
+		import calendar
+
+		gptime = ''
+		gplong = ''
+		gplati = ''
+		while not (gptime and gplong and gplati):
+			with open serial.Serial('/dev/ttyAMA0', 9600, timeout=1) as ser:
+				line = ser.readline()
+				# $GPZDA,hhmmss.ss,dd,mm,yyyy,xx,yy*CC
+				#where:
+					#hhmmss    HrMinSec(UTC)
+					#dd,mm,yyy Day,Month,Year
+					#xx        local zone hours -13..13
+					#yy        local zone minutes 0..59
+					#*CC       checksum
+				if line[0:5] == '$GPZDA':
+					convunix = line[7:27]
+					convunix = convunix[0:2] + ',' + convunix[2:4] + ',' + convunix[4:]
+					# "%Y:%m:%d %H:%M:%S"
+					#time.mktime(datetime.datetime.strptime(convunix, "%H,%M,%S.%f,%d,%m,%Y").timetuple())
+					gptime = calendar.timegm(datetime.datetime.strptime(convunix, "%H,%M,%S.%f,%d,%m,%Y").timetuple())
+				else:
+					pass
+				# $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
+				#Where:
+				#GGA          Global Positioning System Fix Data
+				#123519       Fix taken at 12:35:19 UTC
+				#4807.038,N   Latitude 48 deg 07.038' N
+				#01131.000,E  Longitude 11 deg 31.000' E
+				#1            Fix quality: 0 = invalid
+										#1 = GPS fix (SPS)
+										#2 = DGPS fix
+										#3 = PPS fix
+										#4 = Real Time Kinematic
+										#5 = Float RTK
+										#6 = estimated (dead reckoning) (2.3 feature)
+										#7 = Manual input mode
+										#8 = Simulation mode
+				#08           Number of satellites being tracked
+				#0.9          Horizontal dilution of position
+				#545.4,M      Altitude, Meters, above mean sea level
+				#46.9,M       Height of geoid (mean sea level) above WGS84
+								#ellipsoid
+				#(empty field) time in seconds since last DGPS update
+				#(empty field) DGPS station ID number
+				#*47          the checksum data, always begins with *
+				if line[0:5] == '$GPGGA':
+					gplati = line[18:26]
+					gplong = line[31:39]
+				else:
+					pass
+			print(gptime) if gptime else print("WAITING...")
+			print(gplong) if gplong else print("WAITING...")
+			print(gplati) if gplati else print("WAITING...")
+		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
+			fff.write(Lat, Lon, Corrected Start time)
+			fff.write(gplati, gplong, gptime)
+			fff.write('Time(s, UTC, unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
+		self.gpstimestart = gptime
+		return
+
+	def backup_csv(self):
+		'''This function determines the amount of time which has passed since the start.  If it has passed a
+		certain threshold, it calls a function to save the temp.csv to the thumbdrive.
+		'''
+		# Check if time difference is 10 minutes.
+		if (int(time.time()) - int(self.gpstimestart))/self.backupcount > 600:
+			ret = self.perform_save
+			if ret == 1:
+				self.backupcount += 1
 				pass
-			except KeyboardInterrupt:
-				quit()
-			except StopIteration:
-				session = None
-				print("GPSD has terminated")
+			else:
+				print("Something went wrong backing up the file")
+				pass
+		return
+
+	def perform_save(self):
+		''' This function backs up the file from temporary to permanent storage.
+		This is called by backup_csv, and called once directly during shutdown
+		'''
+		if self.gpstimestart:
+			copyfile(str(self.cfg.localpath() + '/temp.csv'), \
+				str('/media/BEEPDRIV/' + self.gpstimestart + '.csv'))
+			return 1
+		else:
+			return 0
