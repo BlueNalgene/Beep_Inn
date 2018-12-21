@@ -231,7 +231,7 @@ class SDRTools():
 				print("WAITING...")
 		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
 			fff.write("Lat, Lon, Corrected Start time")
-			fff.write(str(gplati, gplong, gptime))
+			fff.write(str(gplati, gplong, str(gptime)))
 			fff.write('Time(s, UTC, unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
 		self.gpstimestart = gptime
 		return
