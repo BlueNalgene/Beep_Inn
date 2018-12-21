@@ -213,8 +213,8 @@ class SDRTools():
 				#*47          the checksum data, always begins with *
 				elif "GPGGA" in result[0]:
 				#if line[0:5] == '$GPGGA':
-					gplati = str(result[2], result[3])
-					gplong = str(result[4], result[5])
+					gplati = result[2] + result[3]
+					gplong = result[4] + result[5]
 				else:
 					pass
 			if gptime:
