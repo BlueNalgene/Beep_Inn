@@ -211,7 +211,7 @@ class SDRTools():
 				#(empty field) time in seconds since last DGPS update
 				#(empty field) DGPS station ID number
 				#*47          the checksum data, always begins with *
-				elif "GPGGA" in result[0]
+				elif "GPGGA" in result[0]:
 				#if line[0:5] == '$GPGGA':
 					gplati = result[2]
 					gplong = result[3]
