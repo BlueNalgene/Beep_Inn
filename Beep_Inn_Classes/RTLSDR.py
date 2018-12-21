@@ -169,7 +169,9 @@ class SDRTools():
 		while not (gptime and gplong and gplati):
 			with serial.Serial('/dev/ttyAMA0', 9600, timeout=1) as ser:
 				line = ser.readline()
-				line = line.decode('utf-8')
+				line = str(line.decode('utf-8'))
+				print(line)
+				result = [x.strip() for x line.split(',')]
 				# $GPZDA,hhmmss.ss,dd,mm,yyyy,xx,yy*CC
 				#where:
 					#hhmmss    HrMinSec(UTC)
@@ -177,15 +179,15 @@ class SDRTools():
 					#xx        local zone hours -13..13
 					#yy        local zone minutes 0..59
 					#*CC       checksum
-				if line[0:5] == '$GPZDA':
-					convunix = line[7:27]
-					convunix = convunix[0:2] + ',' + convunix[2:4] + ',' + convunix[4:]
+				if "GPZDA" in result[0]:
+				#if line[0:5] == '$GPZDA':
+					convunix = result[1]
+					convunix = convunix[0:2] + ',' + convunix[2:4] + ',' + convunix[4:] +  ',' +\
+						result[2] +  ',' + result[3] +  ',' + result[4]
 					# "%Y:%m:%d %H:%M:%S"
 					#time.mktime(datetime.datetime.strptime(convunix, "%H,%M,%S.%f,%d,%m,%Y").timetuple())
 					gptime = calendar.timegm(datetime.datetime.strptime(convunix,\
 						"%H,%M,%S.%f,%d,%m,%Y").timetuple())
-				else:
-					pass
 				# $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
 				#Where:
 				#GGA          Global Positioning System Fix Data
@@ -209,9 +211,10 @@ class SDRTools():
 				#(empty field) time in seconds since last DGPS update
 				#(empty field) DGPS station ID number
 				#*47          the checksum data, always begins with *
-				if line[0:5] == '$GPGGA':
-					gplati = line[18:26]
-					gplong = line[31:39]
+				elif "GPGGA" in result[0]
+				#if line[0:5] == '$GPGGA':
+					gplati = result[2]
+					gplong = result[3]
 				else:
 					pass
 			if gptime:
