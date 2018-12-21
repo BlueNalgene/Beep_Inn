@@ -213,8 +213,8 @@ class SDRTools():
 				#*47          the checksum data, always begins with *
 				elif "GPGGA" in result[0]:
 				#if line[0:5] == '$GPGGA':
-					gplati = result[2]
-					gplong = result[3]
+					gplati = str(result[2], result[3])
+					gplong = str(result[4], result[5])
 				else:
 					pass
 			if gptime:
@@ -231,7 +231,7 @@ class SDRTools():
 				print("WAITING...")
 		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
 			fff.write("Lat, Lon, Corrected Start time")
-			fff.write(gplati, gplong, gptime)
+			fff.write(str(gplati, gplong, gptime))
 			fff.write('Time(s, UTC, unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
 		self.gpstimestart = gptime
 		return
