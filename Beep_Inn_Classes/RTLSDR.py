@@ -169,6 +169,7 @@ class SDRTools():
 		while not (gptime and gplong and gplati):
 			with serial.Serial('/dev/ttyAMA0', 9600, timeout=1) as ser:
 				line = ser.readline()
+				line = line.decode('utf-8')
 				# $GPZDA,hhmmss.ss,dd,mm,yyyy,xx,yy*CC
 				#where:
 					#hhmmss    HrMinSec(UTC)
