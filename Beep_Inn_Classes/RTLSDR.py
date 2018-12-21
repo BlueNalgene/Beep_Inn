@@ -257,6 +257,6 @@ class SDRTools():
 		from shutil import copyfile
 		if self.gpstimestart:
 			copyfile(str(self.cfg.localpath() + '/temp.csv'), \
-				str('/media/BEEPDRIV/' + self.gpstimestart + '.csv'))
+				str('/media/pi/BEEPDRIV/' + self.gpstimestart + '.csv'))
 			return 1
 		return 0
