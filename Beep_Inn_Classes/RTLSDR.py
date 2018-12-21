@@ -230,8 +230,8 @@ class SDRTools():
 			else:
 				print("WAITING...")
 		with open(str(self.cfg.localpath() + '/temp.csv'), 'w') as fff:
-			fff.write("Lat, Lon, Corrected Start time")
-			relinf = str(gplati) + str(gplong) + str(gptime)
+			fff.write("Latitude, Longitude, Corrected Start Time\n")
+			relinf = str(gplati) + ',' + str(gplong) + ',' + str(gptime) + '\n'
 			fff.write(relinf)
 			fff.write('Time(s, UTC, unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
 		self.gpstimestart = gptime
@@ -255,8 +255,10 @@ class SDRTools():
 		This is called by backup_csv, and called once directly during shutdown
 		'''
 		from shutil import copyfile
+		print(self.cfg.localpath(), type(self.cfg.localpath()))
+		print(self.gpstimestart, type(self.gpstimestart))
 		if self.gpstimestart:
 			copyfile(str(self.cfg.localpath() + '/temp.csv'), \
-				str('/media/pi/BEEPDRIV/' + self.gpstimestart + '.csv'))
+				str('/media/pi/BEEPDRIV/' + str(self.gpstimestart) + '.csv'))
 			return 1
 		return 0
