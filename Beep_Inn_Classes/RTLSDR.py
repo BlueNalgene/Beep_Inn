@@ -171,7 +171,7 @@ class SDRTools():
 				line = ser.readline()
 				line = str(line.decode('utf-8'))
 				print(line)
-				result = [x.strip() for x line.split(',')]
+				result = [x.strip() for x in line.split(',')]
 				# $GPZDA,hhmmss.ss,dd,mm,yyyy,xx,yy*CC
 				#where:
 					#hhmmss    HrMinSec(UTC)
