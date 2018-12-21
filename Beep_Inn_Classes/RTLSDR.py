@@ -19,8 +19,7 @@ import numpy as np
 
 # Local Imports
 from rtlsdr import RtlSdr
-import Config
-import Detect_Peaks
+from . import Config, Detect_Peaks
 
 class SDRTools():
 	'''RTLSDR class handles all of the SDR related commands
