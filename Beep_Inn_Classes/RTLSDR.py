@@ -124,8 +124,13 @@ class SDRTools():
 		plt.ylabel('Relative power (dB)')
 		plt.ylim(-50, 10)
 		# We find local peaks from the intensity 1D
-		peaks = Detect_Peaks.detect_peaks(intense, threshold=self.thresh/max(intense),\
+		peaks = Detect_Peaks.detect_peaks(intense, threshold=self.thresh*max(intense),\
 			mpd=self.pkdist, show=False)
+
+		#with open("test.csv", "w") as fff:
+			#for i in range(0, len(intense)):
+				#theline = str(intense[i]) + '\n'
+				#fff.write(theline)
 
 		lowvals = []
 		for i in intense:
@@ -133,6 +138,9 @@ class SDRTools():
 				lowvals.append(i)
 
 		for i in peaks:
+			if self.gui_switch:
+				print((str(i) + ',' + str(intense[i])))
+				plt.Circle((i, intense[i]), radius= 2)
 			peakhgt = 10*math.log10(intense[i])
 			low = 10*math.log10(stats.median(lowvals))
 			print(lowvals)
@@ -212,7 +220,6 @@ class SDRTools():
 				#(empty field) DGPS station ID number
 				#*47          the checksum data, always begins with *
 				elif "GPGGA" in result[0]:
-				#if line[0:5] == '$GPGGA':
 					gplati = result[2] + result[3]
 					gplong = result[4] + result[5]
 				else:

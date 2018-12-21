@@ -45,8 +45,6 @@ if __name__ == '__main__':
 	arg = Arg.Args()
 	arg = arg.get_parser().parse_args()
 	Config.Configurator()
-	#if arg.rtcgetter:
-		#Clockset.rtc()
 	if not os.path.isdir("/media/pi/BEEPDRIV"):
 		print("ERROR: no usb drive found at /media/pi/BEEPDRIV")
 		quit()
