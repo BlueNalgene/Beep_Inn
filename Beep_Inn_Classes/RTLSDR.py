@@ -123,6 +123,8 @@ class SDRTools():
 		plt.xlabel('Frequency (MHz)')
 		plt.ylabel('Relative power (dB)')
 		plt.ylim(-50, 10)
+		# Dirty pattern suppression
+		intense[512] = (float(intense[511]) + float(intense[513]))/2
 		# We find local peaks from the intensity 1D
 		peaks = Detect_Peaks.detect_peaks(intense, threshold=self.thresh*max(intense),\
 			mpd=self.pkdist, show=False)
