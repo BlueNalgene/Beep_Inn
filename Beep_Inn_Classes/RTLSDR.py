@@ -245,7 +245,7 @@ class SDRTools():
 			fff.write("Latitude, Longitude, Corrected Start Time\n")
 			relinf = str(gplati) + ',' + str(gplong) + ',' + str(gptime) + '\n'
 			fff.write(relinf)
-			fff.write('Time(s, UTC, unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
+			fff.write('Time(s UTC unix), Scan Freq(Hz), Peak Freq(Hz), Amp_baseline(dB), Amp_Hit(dB)\n')
 		self.gpstimestart = gptime
 		return
 
