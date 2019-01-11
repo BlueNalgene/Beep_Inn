@@ -142,7 +142,7 @@ class SDRTools():
 		for i in peaks:
 			if self.gui_switch:
 				print((str(i) + ',' + str(intense[i])))
-				plt.Circle((i, intense[i]), radius= 2)
+				plt.Circle((i,intense[i]), radius= 2)
 			peakhgt = 10*math.log10(intense[i])
 			low = 10*math.log10(stats.median(lowvals))
 			print(lowvals)
@@ -182,22 +182,26 @@ class SDRTools():
 				line = str(line.decode('utf-8'))
 				print(line)
 				result = [x.strip() for x in line.split(',')]
-				# $GPZDA,hhmmss.ss,dd,mm,yyyy,xx,yy*CC
-				#where:
-					#hhmmss    HrMinSec(UTC)
-					#dd,mm,yyy Day,Month,Year
-					#xx        local zone hours -13..13
-					#yy        local zone minutes 0..59
-					#*CC       checksum
-				if "GPZDA" in result[0]:
-				#if line[0:5] == '$GPZDA':
-					convunix = result[1]
-					convunix = convunix[0:2] + ',' + convunix[2:4] + ',' + convunix[4:] +  ',' +\
-						result[2] +  ',' + result[3] +  ',' + result[4]
-					# "%Y:%m:%d %H:%M:%S"
-					#time.mktime(datetime.datetime.strptime(convunix, "%H,%M,%S.%f,%d,%m,%Y").timetuple())
+
+				if "GPRMC" in result[0]:
+				#$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
+				#Where:
+				#RMC          Recommended Minimum sentence C
+				#123519       Fix taken at 12:35:19 UTC
+				#A            Status A=active or V=Void.
+				#4807.038,N   Latitude 48 deg 07.038' N
+				#01131.000,E  Longitude 11 deg 31.000' E
+				#022.4        Speed over the ground in knots
+				#084.4        Track angle in degrees True
+				#230394       Date - 23rd of March 1994
+				#003.1,W      Magnetic Variation
+				#*6A          The checksum data, always begins with *
+					convunix = result[1][0:2] + ',' + result[1][2:4] + ',' + result[1][4:] + ',' +\
+						result[9][0:2] + ',' + result[9][2:4] + ',' + result[9][4:]
 					gptime = calendar.timegm(datetime.datetime.strptime(convunix,\
 						"%H,%M,%S.%f,%d,%m,%Y").timetuple())
+
+				elif "GPGGA" in result[0]:
 				# $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
 				#Where:
 				#GGA          Global Positioning System Fix Data
@@ -205,23 +209,22 @@ class SDRTools():
 				#4807.038,N   Latitude 48 deg 07.038' N
 				#01131.000,E  Longitude 11 deg 31.000' E
 				#1            Fix quality: 0 = invalid
-										#1 = GPS fix (SPS)
-										#2 = DGPS fix
-										#3 = PPS fix
-										#4 = Real Time Kinematic
-										#5 = Float RTK
-										#6 = estimated (dead reckoning) (2.3 feature)
-										#7 = Manual input mode
-										#8 = Simulation mode
+					#1 = GPS fix (SPS)
+					#2 = DGPS fix
+					#3 = PPS fix
+					#4 = Real Time Kinematic
+					#5 = Float RTK
+					#6 = estimated (dead reckoning) (2.3 feature)
+					#7 = Manual input mode
+					#8 = Simulation mode
 				#08           Number of satellites being tracked
 				#0.9          Horizontal dilution of position
 				#545.4,M      Altitude, Meters, above mean sea level
 				#46.9,M       Height of geoid (mean sea level) above WGS84
-								#ellipsoid
+					#ellipsoid
 				#(empty field) time in seconds since last DGPS update
 				#(empty field) DGPS station ID number
 				#*47          the checksum data, always begins with *
-				elif "GPGGA" in result[0]:
 					gplati = result[2] + result[3]
 					gplong = result[4] + result[5]
 				else:
